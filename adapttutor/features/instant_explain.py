@@ -17,7 +17,6 @@ _go_deeper_cb: Optional[Callable[[str], None]] = None
 _bubble_llm_pending: bool = False
 
 BUBBLE_WIDTH = 280
-_AUTO_DISMISS_MS = 4000
 _CTRL_C_WINDOW_MS = 500
 
 SYSTEM_DEFAULT = "You are AdaptTutor, a patient study helper. Follow the user's format request. Be concise."
@@ -104,6 +103,7 @@ def show_bubble(selected_text: str, cursor_position: tuple[int, int]) -> None:
     top.overrideredirect(True)
     apply_topmost(top)
     top.configure(bg=theme.bubble_outer_bg)
+    top.title("AdaptTutor — Bubble")
 
     outer = tk.Frame(
         top,
@@ -133,16 +133,7 @@ def show_bubble(selected_text: str, cursor_position: tuple[int, int]) -> None:
     btn_row = tk.Frame(main_body, bg=panel)
     body_frame = tk.Frame(outer, bg=panel)
 
-    state: dict[str, object] = {"auto_id": None, "listener": None, "opened_mono": time.monotonic(), "armed": True}
-
-    def cancel_auto() -> None:
-        aid = state.get("auto_id")
-        if aid is not None:
-            try:
-                top.after_cancel(int(aid))
-            except (tk.TclError, TypeError, ValueError):
-                pass
-            state["auto_id"] = None
+    state: dict[str, object] = {"listener": None, "opened_mono": time.monotonic(), "armed": True}
 
     def stop_ctrl_listener() -> None:
         lst = state.get("listener")
@@ -154,23 +145,16 @@ def show_bubble(selected_text: str, cursor_position: tuple[int, int]) -> None:
             state["listener"] = None
 
     def dismiss_silent() -> None:
-        cancel_auto()
         stop_ctrl_listener()
         _dismiss_bubble()
 
     def dismiss_interactive() -> None:
         state["armed"] = False
-        cancel_auto()
         stop_ctrl_listener()
         _dismiss_bubble()
 
     def on_interact(_e: tk.Event | None = None) -> None:
-        if state.get("armed"):
-            cancel_auto()
-
-    def arm_auto_dismiss() -> None:
-        cancel_auto()
-        state["auto_id"] = top.after(_AUTO_DISMISS_MS, dismiss_interactive)
+        _ = _e
 
     def _place_window(h: int) -> None:
         w = BUBBLE_WIDTH
@@ -321,8 +305,6 @@ def show_bubble(selected_text: str, cursor_position: tuple[int, int]) -> None:
         top.after(_CTRL_C_WINDOW_MS, stop_ctrl_listener)
     except Exception:
         state["listener"] = None
-
-    arm_auto_dismiss()
 
     top.update_idletasks()
     _place_window(top.winfo_reqheight())

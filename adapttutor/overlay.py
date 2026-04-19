@@ -21,7 +21,11 @@ from .config import (
 )
 from .clipboard_monitor import ClipboardMonitor
 from .features.explain_differently import ExplainDifferentlyPanel
-from .features.instant_explain import configure_bubble_host, dismiss_if_open as dismiss_instant_bubble
+from .features.instant_explain import (
+    configure_bubble_host,
+    dismiss_if_open as dismiss_instant_bubble,
+    set_go_deeper_callback,
+)
 from .features.flashcard_generator import FlashcardGeneratorPanel
 from .features.quiz_me import QuizMePanel
 from .features.smart_summary import SmartSummaryPanel
@@ -60,6 +64,7 @@ class OverlayManager:
         )
 
         configure_bubble_host(self._launcher.window, self._theme)
+        set_go_deeper_callback(self._on_instant_go_deeper)
         self._clipboard = ClipboardMonitor(
             get_study_active=lambda: self._watcher.get_state().study_active,
             schedule_ui=lambda fn: self._launcher.window.after(0, fn),
@@ -213,13 +218,7 @@ class OverlayManager:
             return
 
         if feature_name == "Explain Differently":
-            self._panel = ExplainDifferentlyPanel(
-                root=self.root,
-                ui_root=self._launcher.window,
-                on_close=self._close_feature_panel,
-                theme=self._theme,
-            )
-            self._panel.reposition_to_launcher(self._launcher.window)
+            self._open_explain_differently_panel()
             return
 
         if feature_name == "Quiz Me":
@@ -279,6 +278,29 @@ class OverlayManager:
             on_error=on_err,
             ui_root=self._launcher.window,
         )
+
+    def _open_explain_differently_panel(self, initial_concept: str = "", auto_submit: bool = False) -> None:
+        self._panel = ExplainDifferentlyPanel(
+            root=self.root,
+            ui_root=self._launcher.window,
+            on_close=self._close_feature_panel,
+            theme=self._theme,
+            initial_concept=initial_concept,
+            auto_submit=auto_submit,
+        )
+        self._panel.reposition_to_launcher(self._launcher.window)
+
+    def _on_instant_go_deeper(self, selected_text: str) -> None:
+        # Route "Go Deeper" from Instant Explain into Explain Differently.
+        # Auto-submit so the user gets deeper output in one click.
+        if self._panel:
+            try:
+                self._panel.destroy()
+            except Exception:
+                pass
+            self._panel = None
+        self._close_menu()
+        self._open_explain_differently_panel(initial_concept=selected_text, auto_submit=True)
 
     def _close_feature_panel(self) -> None:
         if not self._panel:
@@ -341,6 +363,7 @@ class _FeaturePanel:
         self.window.overrideredirect(True)
         apply_topmost(self.window)
         self.window.configure(bg=theme.window_bg)
+        self.window.title("AdaptTutor — Panel")
 
         header = tk.Frame(self.window, bg=theme.window_bg)
         header.pack(fill="x", padx=PANEL_PAD, pady=(PANEL_PAD, 8))
@@ -460,6 +483,7 @@ class _LauncherCircle:
         apply_topmost(self.window)
         self.window.configure(bg=theme.launcher_bg)
         self.window.attributes("-alpha", 1.0)
+        self.window.title("AdaptTutor — Launcher")
 
         self._on_toggle_menu = on_toggle_menu
 
@@ -561,6 +585,7 @@ class _MenuWindow:
         self.window.overrideredirect(True)
         apply_topmost(self.window)
         self.window.configure(bg=theme.menu_bg)
+        self.window.title("AdaptTutor — Menu")
 
         self._anchor = anchor_window
         self._on_request_close = on_request_close

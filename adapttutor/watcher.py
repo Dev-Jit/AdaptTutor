@@ -116,7 +116,11 @@ class WindowWatcher(threading.Thread):
         while not self._stop.is_set():
             title = _safe_get_active_window_title()
             print(f"Active window: {title}")
-            if _is_adapttutor_overlay_title(title):
+            # Ignore our own overlay windows and transient empty titles.
+            # Some overrideredirect Tk windows can momentarily report blank titles
+            # while focus shifts, which would otherwise flip study_active False and
+            # briefly hide the launcher/bubble.
+            if _is_adapttutor_overlay_title(title) or not (title or "").strip():
                 self._stop.wait(self._poll_seconds)
                 continue
 

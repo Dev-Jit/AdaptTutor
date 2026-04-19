@@ -101,6 +101,8 @@ class ExplainDifferentlyPanel:
         ui_root: tk.Misc,
         on_close: Callable[[], None],
         theme: UiTheme,
+        initial_concept: str = "",
+        auto_submit: bool = False,
     ) -> None:
         self._on_close = on_close
         self._ui_root = ui_root
@@ -158,6 +160,7 @@ class ExplainDifferentlyPanel:
         self._concept.bind("<FocusIn>", self._clear_placeholder)
         self._concept.bind("<FocusOut>", self._restore_placeholder)
         self._had_input = False
+        self._prefill_concept(initial_concept)
 
         submit_row = tk.Frame(inner, bg=t.window_bg)
         submit_row.pack(anchor="w", fill="x", pady=(0, 12))
@@ -197,6 +200,17 @@ class ExplainDifferentlyPanel:
         self._set_cards_loading("Submit a concept to see three explanations here.")
 
         self.window.geometry(f"{PANEL_WIDTH}x{PANEL_MAX_HEIGHT}+0+0")
+        if auto_submit and self._concept_value():
+            self.window.after(120, self._on_submit)
+
+    def _prefill_concept(self, concept: str) -> None:
+        text = (concept or "").strip()
+        if not text:
+            return
+        self._concept.delete("1.0", "end")
+        self._concept.insert("1.0", text)
+        self._concept.configure(fg=self._theme.fg)
+        self._had_input = True
 
     def _clear_placeholder(self, _e: tk.Event) -> None:
         if not self._had_input and self._concept.get("1.0", "end").strip() == self._placeholder:

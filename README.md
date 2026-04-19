@@ -8,7 +8,7 @@ This repo currently implements **Step 1 only** from `AdaptTutor_PRD.md`:
 
 ### Run
 
-```powershell
+```powershell  
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
