@@ -1,0 +1,6 @@
+pygetwindow
+groq
+pymupdf
+pyperclip
+pynput
+
