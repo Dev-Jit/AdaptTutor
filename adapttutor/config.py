@@ -1,7 +1,7 @@
 import os
 
 # Groq API (used by tutor.py). Prefer environment variable GROQ_API_KEY.
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", " ").strip()
 
 STUDY_KEYWORDS = [
     ".pdf",
