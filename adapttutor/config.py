@@ -31,9 +31,31 @@ STUDY_KEYWORDS = [
     "revision",
     "syllabus",
     "wikipedia",
+    "GeeksforGeek",
+    "example",
+    "stackoverflow",
+    "github",
+    "gitlab",
+    "bitbucket",
+    "jira",
+    "confluence",
+    "redmine",
+    "trello",
+    "asana",
+    "notion",
+    "obsidian",
+    "roam research",
+    "logseq",
+    "zettlr",
+    "logseq",
+    "introduction",
+    "dsa",
+    "data",
+    "algorithm",
+    "structures",
 ]
 
-# Native desktop apps often use: "<filename> - <AppName>". Match end of title (lowercased).
+# Native desktop apps often use: "<filename> - <AppName>". Match end of title (lowercased).""
 STUDY_APP_TITLE_SUFFIXES = [
     " - word",
     " - powerpoint",
