@@ -1,7 +1,7 @@
 import os
 
 # Groq API (used by tutor.py). Prefer environment variable GROQ_API_KEY.
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", " ").strip()
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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").strip()
 
 STUDY_KEYWORDS = [
     ".pdf",
@@ -30,6 +30,7 @@ STUDY_KEYWORDS = [
     "worksheet",
     "revision",
     "syllabus",
+    "wikipedia",
 ]
 
 # Native desktop apps often use: "<filename> - <AppName>". Match end of title (lowercased).
@@ -62,8 +63,10 @@ PANEL_MAX_HEIGHT = 600
 PANEL_PAD = 16
 
 FEATURES = [
+    ("Ask AI", "#FF8C42", "💬"),
     ("Explain Differently", "#00BFA5", "🔁"),
     ("Quiz Me", "#FF6B6B", "❓"),
     ("Smart Summary", "#FFA726", "🧠"),
     ("Flashcard Generator", "#42A5F5", "🗂️"),
 ]
+
