@@ -10,12 +10,15 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import Any, Callable
 
+import pyperclip
+
 from ..config import PANEL_MAX_HEIGHT, PANEL_PAD, PANEL_WIDTH
 from ..theme import (
     UiTheme,
     apply_topmost,
     configure_ttk_notebook,
     style_button,
+    style_entry,
     style_text_editable,
 )
 from ..tutor import ask
@@ -214,10 +217,20 @@ class FlashcardGeneratorPanel:
 
     def _gather_content(self) -> str | None:
         pasted = self._paste_text.get("1.0", "end").strip()
-        if not pasted:
-            messagebox.showwarning("Flashcard Generator", "Paste or type some study material first.", parent=self.window)
-            return None
-        return pasted
+        if pasted:
+            return pasted
+        try:
+            clip = (pyperclip.paste() or "").strip()
+        except Exception:
+            clip = ""
+        if clip:
+            return clip
+        messagebox.showwarning(
+            "Flashcard Generator",
+            "Paste/type study material, or copy text first (Ctrl+C).",
+            parent=self.window,
+        )
+        return None
 
     def _clear_card_rows(self) -> None:
         for w in list(self._cards_inner.winfo_children()):
