@@ -20,6 +20,7 @@ from .config import (
     PANEL_WIDTH,
 )
 from .clipboard_monitor import ClipboardMonitor
+from .features.ask_ai import AskAiPanel
 from .features.explain_differently import ExplainDifferentlyPanel
 from .features.instant_explain import (
     configure_bubble_host,
@@ -211,6 +212,15 @@ class OverlayManager:
                 root=self.root,
                 ui_root=self._launcher.window,
                 get_watcher_state=self._watcher.get_state,
+                on_close=self._close_feature_panel,
+                theme=self._theme,
+            )
+            self._panel.reposition_to_launcher(self._launcher.window)
+            return
+
+        if feature_name == "Ask AI":
+            self._panel = AskAiPanel(
+                root=self.root,
                 on_close=self._close_feature_panel,
                 theme=self._theme,
             )

@@ -7,11 +7,12 @@ import json
 import re
 from ctypes import wintypes
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import messagebox, ttk
 from typing import Any, Callable
 
+import pyperclip
+
 from ..config import PANEL_MAX_HEIGHT, PANEL_PAD, PANEL_WIDTH
-from ..pdf_reader import extract_window
 from ..theme import (
     UiTheme,
     apply_topmost,
@@ -132,33 +133,8 @@ class FlashcardGeneratorPanel:
         self._notebook.pack(fill="both", expand=True)
         configure_ttk_notebook(self.window, t)
 
-        tab_page = tk.Frame(self._notebook, bg=t.window_bg)
-        self._notebook.add(tab_page, text="Current Page")
-        tk.Label(
-            tab_page,
-            text="Open the PDF in your reader, then choose the same file here. "
-            "Text is extracted from the watcher’s current page plus the next 9 pages.",
-            bg=t.window_bg,
-            fg=t.fg_muted,
-            wraplength=PANEL_WIDTH - 32,
-            justify="left",
-            font=("Segoe UI", 9),
-        ).pack(anchor="w", pady=(0, 8))
-        path_row = tk.Frame(tab_page, bg=t.window_bg)
-        path_row.pack(fill="x", pady=(0, 4))
-        self._pdf_path = tk.StringVar()
-        pe = tk.Entry(path_row, textvariable=self._pdf_path, font=("Segoe UI", 9))
-        pe.pack(side="left", fill="x", expand=True, padx=(0, 8))
-        style_entry(pe, t)
-        bb = tk.Button(path_row, text="Browse…", command=self._browse_pdf)
-        bb.pack(side="right")
-        style_button(bb, t)
-        self._page_info = tk.Label(tab_page, text="", bg=t.window_bg, font=("Segoe UI", 9), fg=t.fg_soft)
-        self._page_info.pack(anchor="w", pady=(4, 0))
-        self._refresh_page_label()
-
         tab_paste = tk.Frame(self._notebook, bg=t.window_bg)
-        self._notebook.add(tab_paste, text="Paste Text")
+        self._notebook.add(tab_paste, text="Source")
         tk.Label(tab_paste, text="Paste or type study material:", bg=t.window_bg, fg=t.fg, font=("Segoe UI", 9)).pack(
             anchor="w", pady=(0, 4)
         )
@@ -238,43 +214,23 @@ class FlashcardGeneratorPanel:
         style_button(cb, t)
 
         self.window.geometry(f"{PANEL_WIDTH}x{PANEL_MAX_HEIGHT}+0+0")
-        self._notebook.bind("<<NotebookTabChanged>>", lambda _e: self._refresh_page_label())
-
-    def _browse_pdf(self) -> None:
-        path = filedialog.askopenfilename(
-            title="Choose PDF",
-            filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
-        )
-        if path:
-            self._pdf_path.set(path)
-
-    def _refresh_page_label(self) -> None:
-        st = self._get_watcher_state()
-        self._page_info.configure(text=f"Watcher current page: {st.current_page}")
 
     def _gather_content(self) -> str | None:
-        tab_id = self._notebook.select()
-        tab_title = self._notebook.tab(tab_id, "text")
-        if tab_title == "Current Page":
-            path = self._pdf_path.get().strip()
-            if not path:
-                messagebox.showwarning("Flashcard Generator", "Choose a PDF file for Current Page.", parent=self.window)
-                return None
-            st = self._get_watcher_state()
-            text = extract_window(path, st.current_page, 0, 9)
-            if not text.strip():
-                messagebox.showwarning(
-                    "Flashcard Generator",
-                    "No text could be extracted from that page range.",
-                    parent=self.window,
-                )
-                return None
-            return text
         pasted = self._paste_text.get("1.0", "end").strip()
-        if not pasted:
-            messagebox.showwarning("Flashcard Generator", "Paste or type some study material first.", parent=self.window)
-            return None
-        return pasted
+        if pasted:
+            return pasted
+        try:
+            clip = (pyperclip.paste() or "").strip()
+        except Exception:
+            clip = ""
+        if clip:
+            return clip
+        messagebox.showwarning(
+            "Flashcard Generator",
+            "Paste/type study material, or copy text first (Ctrl+C).",
+            parent=self.window,
+        )
+        return None
 
     def _clear_card_rows(self) -> None:
         for w in list(self._cards_inner.winfo_children()):

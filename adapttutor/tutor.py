@@ -22,6 +22,11 @@ except ImportError:
 
 _GROQ_MODEL = "llama-3.3-70b-versatile"
 _GROQ_429_ATTEMPTS = max(1, min(6, int(os.environ.get("GROQ_429_ATTEMPTS", "2"))))
+_ASK_AI_SYSTEM_PROMPT = (
+    "You are Ask AI, a general purpose assistant. Answer any question the user asks\n"
+    "clearly and concisely. Keep responses under 150 words unless asked for more.\n"
+    "Do not use heavy markdown formatting — plain sentences only."
+)
 
 
 def _is_groq_rate_limit(exc: BaseException) -> bool:
@@ -88,6 +93,14 @@ def _call_groq_sync(prompt: str, system: str, max_tokens: int) -> str:
     if last_err is not None:
         raise last_err
     raise RuntimeError("Groq request failed with no response.")
+
+
+def ask_general(question: str) -> str:
+    """Synchronous single-turn Ask AI call."""
+    q = (question or "").strip()
+    if not q:
+        return ""
+    return _call_groq_sync(q, _ASK_AI_SYSTEM_PROMPT, max_tokens=600)
 
 
 def ask(
